@@ -1,0 +1,7 @@
+<launch>
+
+  <node pkg="depthimage_to_laserscan_slice" type="depthimage_to_laserscan_slice_node" name="scan_node" output="screen" >
+    <param name="output_frame_id" value="" />
+  </node>
+
+</launch>

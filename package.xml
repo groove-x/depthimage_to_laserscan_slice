@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>depthimage_to_laserscan_slice</name>
+  <version>0.0.0</version>
+  <description>The depthimage_to_laserscan_slice package</description>
+  <maintainer email="dev@groove-x.com">GROOVE X Development Team</maintainer>
+  <license>TODO</license>
+  <url type="website">https://github.com/groove-x/depthimage_to_laserscan_slice</url>
+  <!-- <author email="jane.doe@example.com">Jane Doe</author> -->
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>image_transport</build_depend>
+  <build_depend>nodelet</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_export_depend>image_transport</build_export_depend>
+  <build_export_depend>nodelet</build_export_depend>
+  <build_export_depend>roscpp</build_export_depend>
+  <build_export_depend>sensor_msgs</build_export_depend>
+  <exec_depend>image_transport</exec_depend>
+  <exec_depend>nodelet</exec_depend>
+  <exec_depend>roscpp</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+
+  <export>
+  </export>
+</package>
