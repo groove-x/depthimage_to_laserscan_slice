@@ -25,7 +25,7 @@ DepthImageToLaserScanSliceNode::DepthImageToLaserScanSliceNode(ros::NodeHandle& 
   nh_.getParam("/camera_matrix/data", param_list);
   double fx_ = param_list[0];
   double fy_ = param_list[4];
-  double cy_ = param_list[2];
+  double cx_ = param_list[2];
   double cy_ = param_list[5];
 
   // depth_to_scan_ = std::make_unique<DepthimageToLaserscanSlice>(
