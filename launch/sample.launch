@@ -1,5 +1,5 @@
 <launch>
-  <arg name="camera_info_yaml" default="$(find package_name)/config/sample.yaml" />
+  <arg name="camera_info_yaml" default="$(find depthimage_to_laserscan_slice)/config/sample.yaml" />
 
   <rosparam command="load" file="$(arg camera_info_yaml)" />
 
