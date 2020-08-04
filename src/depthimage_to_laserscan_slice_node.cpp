@@ -23,10 +23,10 @@ DepthImageToLaserScanSliceNode::DepthImageToLaserScanSliceNode(ros::NodeHandle& 
   nh_.getParam("/image_height", height);
   std::vector<double> param_list;
   nh_.getParam("/camera_matrix/data", param_list);
-  double fx_ = param_list[0];
-  double fy_ = param_list[4];
-  double cx_ = param_list[2];
-  double cy_ = param_list[5];
+  double fx = param_list[0];
+  double fy = param_list[4];
+  double cx = param_list[2];
+  double cy = param_list[5];
 
   // depth_to_scan_ = std::make_unique<DepthimageToLaserscanSlice>(
   //     224, 172, 195.26491142934, 195.484689318979, 111.31867165296,
