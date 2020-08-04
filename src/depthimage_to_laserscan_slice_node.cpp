@@ -28,9 +28,6 @@ DepthImageToLaserScanSliceNode::DepthImageToLaserScanSliceNode(ros::NodeHandle& 
   double cx = param_list[2];
   double cy = param_list[5];
 
-  // depth_to_scan_ = std::make_unique<DepthimageToLaserscanSlice>(
-  //     224, 172, 195.26491142934, 195.484689318979, 111.31867165296,
-  //     86.8194913656314, 1000.0);
   depth_to_scan_ = std::make_unique<DepthimageToLaserscanSlice>(
       width, height, fx, fy, cx, cy, 1000.0);
 
