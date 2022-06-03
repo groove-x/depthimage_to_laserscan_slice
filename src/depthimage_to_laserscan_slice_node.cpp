@@ -11,8 +11,7 @@ inline double DEG2RAD(double degrees) { return degrees * M_PI / 180.0; }
 inline double RAD2DEG(double radians) { return radians * 180.0 / M_PI; }
 
 DepthImageToLaserScanSliceNode::DepthImageToLaserScanSliceNode(ros::NodeHandle& nh)
-    : nh_(nh), it_(nh),
-      range_min_(0.2), range_max_(2.0) {
+    : nh_(nh), it_(nh) {
   private_nh_ = ros::NodeHandle("~");
   private_nh_.getParam("output_frame_id", output_frame_id_);
 
@@ -31,9 +30,18 @@ DepthImageToLaserScanSliceNode::DepthImageToLaserScanSliceNode(ros::NodeHandle& 
   depth_to_scan_ = std::make_unique<DepthimageToLaserscanSlice>(
       width, height, fx, fy, cx, cy, 1000.0);
 
-  depth_to_scan_->set_height(0.05, 0.6);
+  double height_min, height_max;
+  private_nh_.getParam("height_min", height_min);
+  private_nh_.getParam("height_max", height_max);
+  depth_to_scan_->set_height(height_min, height_max);
+
+  private_nh_.getParam("range_min", range_min_);
+  private_nh_.getParam("range_max", range_max_);
   depth_to_scan_->set_range(range_min_, range_max_);
-  depth_to_scan_->set_optical_axis_pitch(DEG2RAD(10));
+
+  double optical_axis_pitch;
+  private_nh_.getParam("optical_axis_pitch", optical_axis_pitch);
+  depth_to_scan_->set_optical_axis_pitch(optical_axis_pitch);
 
   auto angles = depth_to_scan_->angles();
   initialize_laserscan_msg();

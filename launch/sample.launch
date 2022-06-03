@@ -5,6 +5,11 @@
 
   <node pkg="depthimage_to_laserscan_slice" type="depthimage_to_laserscan_slice_node" name="scan_node" output="screen" >
     <param name="output_frame_id" value="" />
+    <param name="height_min" value="0.1" />
+    <param name="height_max" value="0.6" />
+    <param name="range_min" value="0.2" />
+    <param name="range_max" value="2.5" />
+    <param name="optical_axis_pitch" value="0.0" />
   </node>
 
 </launch>
