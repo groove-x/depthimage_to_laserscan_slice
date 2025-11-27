@@ -2,6 +2,7 @@
 
 #include <image_transport/image_transport.h>
 #include <ros/ros.h>
+#include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/LaserScan.h>
 
@@ -11,13 +12,14 @@ class DepthImageToLaserScanSliceNode {
  public:
   DepthImageToLaserScanSliceNode(ros::NodeHandle& nh);
 
-  void callback(const sensor_msgs::ImageConstPtr& msg);
+  void callback(const sensor_msgs::ImageConstPtr& image_msg,
+                const sensor_msgs::CameraInfoConstPtr& info_msg);
 
  private:
   ros::NodeHandle nh_;
   ros::NodeHandle private_nh_;
   image_transport::ImageTransport it_;
-  image_transport::Subscriber depth_sub_;
+  image_transport::CameraSubscriber depth_sub_;
   ros::Publisher scan_pub_;
 
   std::string output_frame_id_;

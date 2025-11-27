@@ -15,45 +15,43 @@ DepthImageToLaserScanSliceNode::DepthImageToLaserScanSliceNode(ros::NodeHandle& 
   private_nh_ = ros::NodeHandle("~");
   private_nh_.getParam("output_frame_id", output_frame_id_);
 
-  // load camera_info from rosparam
-  int width;
-  nh_.getParam("/image_width", width);
-  int height;
-  nh_.getParam("/image_height", height);
-  std::vector<double> param_list;
-  nh_.getParam("/camera_matrix/data", param_list);
-  double fx = param_list[0];
-  double fy = param_list[4];
-  double cx = param_list[2];
-  double cy = param_list[5];
-
-  depth_to_scan_ = std::make_unique<DepthimageToLaserscanSlice>(
-      width, height, fx, fy, cx, cy, 1000.0);
-
-  double height_min, height_max;
-  private_nh_.getParam("height_min", height_min);
-  private_nh_.getParam("height_max", height_max);
-  depth_to_scan_->set_height(height_min, height_max);
-
   private_nh_.getParam("range_min", range_min_);
   private_nh_.getParam("range_max", range_max_);
-  depth_to_scan_->set_range(range_min_, range_max_);
 
-  double optical_axis_pitch;
-  private_nh_.getParam("optical_axis_pitch", optical_axis_pitch);
-  depth_to_scan_->set_optical_axis_pitch(optical_axis_pitch);
-
-  auto angles = depth_to_scan_->angles();
-  initialize_laserscan_msg();
-
-  depth_sub_ = it_.subscribe(
-      "/depth/image_raw", 1,
-      boost::bind(&DepthImageToLaserScanSliceNode::callback, this, _1));
+  depth_sub_ = it_.subscribeCamera(
+      "/depth/image_raw", 1, &DepthImageToLaserScanSliceNode::callback, this);
   scan_pub_ = nh_.advertise<sensor_msgs::LaserScan>("/depth/scan", 1);
 };
 
 void DepthImageToLaserScanSliceNode::callback(
-    const sensor_msgs::ImageConstPtr& depth_msg) {
+    const sensor_msgs::ImageConstPtr& depth_msg,
+    const sensor_msgs::CameraInfoConstPtr& info_msg) {
+  // Initialize depth_to_scan_ on first callback using camera info
+  if (!depth_to_scan_) {
+    int width = info_msg->width;
+    int height = info_msg->height;
+    double fx = info_msg->K[0];
+    double fy = info_msg->K[4];
+    double cx = info_msg->K[2];
+    double cy = info_msg->K[5];
+
+    depth_to_scan_ = std::make_unique<DepthimageToLaserscanSlice>(
+        width, height, fx, fy, cx, cy, 1000.0);
+
+    double height_min, height_max;
+    private_nh_.getParam("height_min", height_min);
+    private_nh_.getParam("height_max", height_max);
+    depth_to_scan_->set_height(height_min, height_max);
+
+    depth_to_scan_->set_range(range_min_, range_max_);
+
+    double optical_axis_pitch;
+    private_nh_.getParam("optical_axis_pitch", optical_axis_pitch);
+    depth_to_scan_->set_optical_axis_pitch(optical_axis_pitch);
+
+    initialize_laserscan_msg();
+  }
+
   cv_bridge::CvImagePtr cv_ptr;
   try {
     cv_ptr = cv_bridge::toCvCopy(depth_msg, sensor_msgs::image_encodings::TYPE_16UC1);
