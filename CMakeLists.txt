@@ -14,7 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   nodelet
   roscpp
   sensor_msgs
-  cv_bridge
+  pluginlib
 )
 
 if (NOT CMAKE_BUILD_TYPE)
@@ -27,7 +27,8 @@ endif ()
 
 catkin_package(
   INCLUDE_DIRS include
-  CATKIN_DEPENDS roscpp
+  LIBRARIES ${PROJECT_NAME}
+  CATKIN_DEPENDS image_transport nodelet roscpp sensor_msgs
 )
 
 ###########
@@ -39,22 +40,41 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(${PROJECT_NAME}_node
+add_library(${PROJECT_NAME}
   src/depthimage_to_laserscan_slice_node.cpp
   src/depthimage_to_laserscan_slice.cpp)
-
-target_link_libraries(${PROJECT_NAME}_node
+target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
 )
 
-#############
-## Install ##
-#############
+add_library(${PROJECT_NAME}_nodelet
+  src/depthimage_to_laserscan_slice_nodelet.cpp)
+target_link_libraries(${PROJECT_NAME}_nodelet
+  ${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+)
 
-install(TARGETS ${PROJECT_NAME}_node
+add_executable(${PROJECT_NAME}_node
+  src/depthimage_to_laserscan_slice_main.cpp)
+target_link_libraries(${PROJECT_NAME}_node
+  ${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+)
+
+install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_nodelet ${PROJECT_NAME}_node
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
+install(DIRECTORY include/${PROJECT_NAME}/
+        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+install(FILES nodelets.xml
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+
+if (CATKIN_ENABLE_TESTING)
+  catkin_add_gtest(test_depthimage_to_laserscan_slice
+    test/test_depthimage_to_laserscan_slice.cpp)
+  target_link_libraries(test_depthimage_to_laserscan_slice ${PROJECT_NAME})
+endif()
 
 install(DIRECTORY
   launch

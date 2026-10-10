@@ -1,7 +1,9 @@
 #pragma once
-#include <opencv2/opencv.hpp>
-
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <memory>
+#include <vector>
 
 namespace depthimage_to_laserscan_slice {
 
@@ -23,8 +25,16 @@ class DepthimageToLaserscanSlice {
     optical_axis_pitch_ = optical_axis_pitch;
   }
 
+  int width() const { return width_; }
+  int height() const { return height_; }
+
   std::shared_ptr<std::vector<float>> angles() { return angles_; }
-  std::shared_ptr<std::vector<float>> convert(const cv::Mat &depth_image);
+
+  // Convert a 16-bit depth image to scan ranges.
+  // `depth` points to the first pixel, `step` is the row size in bytes.
+  // The image must be width() x height() pixels in host byte order.
+  void convert(const uint8_t *depth, size_t step,
+               std::vector<float> &ranges) const;
 
  private:
   int width_;

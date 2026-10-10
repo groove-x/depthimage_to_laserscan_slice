@@ -1,0 +1,9 @@
+<library path="lib/libdepthimage_to_laserscan_slice_nodelet">
+  <class name="depthimage_to_laserscan_slice/DepthImageToLaserScanSliceNodelet"
+         type="depthimage_to_laserscan_slice::DepthImageToLaserScanSliceNodelet"
+         base_class_type="nodelet::Nodelet">
+    <description>
+      Convert a depth image to a laser scan by slicing it at a height range.
+    </description>
+  </class>
+</library>
