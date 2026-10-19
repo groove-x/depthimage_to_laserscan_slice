@@ -75,19 +75,23 @@ TEST(DepthimageToLaserscanSlice, MatchesReference) {
 TEST(DepthimageToLaserscanSlice, PaddedRowsGiveTheSameRanges) {
   const auto converter = make_converter();
   const auto depth = random_depth(2);
-
-  const size_t padded_step = kWidth * sizeof(uint16_t) + 6;
-  std::vector<uint8_t> padded(padded_step * kHeight, 0xff);
-  for (int v = 0; v < kHeight; ++v) {
-    std::memcpy(padded.data() + v * padded_step, depth.data() + v * kWidth,
-                kWidth * sizeof(uint16_t));
-  }
-
-  std::vector<float> contiguous_ranges, padded_ranges;
+  std::vector<float> contiguous_ranges;
   converter.convert(reinterpret_cast<const uint8_t *>(depth.data()),
                     kWidth * sizeof(uint16_t), contiguous_ranges);
-  converter.convert(padded.data(), padded_step, padded_ranges);
-  EXPECT_EQ(contiguous_ranges, padded_ranges);
+
+  // An odd padding leaves every other row unaligned for uint16_t.
+  for (const size_t padding : {6, 7}) {
+    SCOPED_TRACE(padding);
+    const size_t padded_step = kWidth * sizeof(uint16_t) + padding;
+    std::vector<uint8_t> padded(padded_step * kHeight, 0xff);
+    for (int v = 0; v < kHeight; ++v) {
+      std::memcpy(padded.data() + v * padded_step, depth.data() + v * kWidth,
+                  kWidth * sizeof(uint16_t));
+    }
+    std::vector<float> padded_ranges;
+    converter.convert(padded.data(), padded_step, padded_ranges);
+    EXPECT_EQ(contiguous_ranges, padded_ranges);
+  }
 }
 
 int main(int argc, char **argv) {

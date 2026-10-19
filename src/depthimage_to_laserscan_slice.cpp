@@ -1,5 +1,7 @@
 #include "depthimage_to_laserscan_slice/depthimage_to_laserscan_slice.hpp"
 
+#include <cstring>
+
 namespace depthimage_to_laserscan_slice {
 
 DepthimageToLaserscanSlice::DepthimageToLaserscanSlice(int width, int height,
@@ -28,10 +30,11 @@ void DepthimageToLaserscanSlice::convert(const uint8_t *depth, size_t step,
   // The image is upside down: walk the pixels from the last one backwards.
   const double *pcoeff = coeff_.data();
   for (int v = 0; v < height_; ++v) {
-    const auto *row = reinterpret_cast<const uint16_t *>(
-        depth + (height_ - 1 - v) * step);
+    const uint8_t *row = depth + (height_ - 1 - v) * step;
     for (int u = 0; u < width_; ++u) {
-      const auto d = row[width_ - 1 - u];
+      // memcpy, because a row is not 2-byte aligned when the step is odd.
+      uint16_t d;
+      std::memcpy(&d, row + (width_ - 1 - u) * sizeof(uint16_t), sizeof(d));
       auto range = d * *(pcoeff++);
       auto y = d * *(pcoeff++);
       // store minimum range with valid conditions
