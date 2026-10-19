@@ -73,7 +73,10 @@ install(FILES nodelets.xml
 if (CATKIN_ENABLE_TESTING)
   catkin_add_gtest(test_depthimage_to_laserscan_slice
     test/test_depthimage_to_laserscan_slice.cpp)
-  target_link_libraries(test_depthimage_to_laserscan_slice ${PROJECT_NAME})
+  # catkin_add_gtest makes no target when gtest is not found.
+  if (TARGET test_depthimage_to_laserscan_slice)
+    target_link_libraries(test_depthimage_to_laserscan_slice ${PROJECT_NAME})
+  endif()
 endif()
 
 install(DIRECTORY
