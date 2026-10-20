@@ -1,18 +1,24 @@
 #include <depthimage_to_laserscan_slice/depthimage_to_laserscan_slice_node.hpp>
 
-#include <cv_bridge/cv_bridge.h>
+#include <boost/make_shared.hpp>
 #include <image_transport/image_transport.h>
 #include <ros/ros.h>
 #include <sensor_msgs/image_encodings.h>
 
 namespace depthimage_to_laserscan_slice {
 
-inline double DEG2RAD(double degrees) { return degrees * M_PI / 180.0; }
-inline double RAD2DEG(double radians) { return radians * 180.0 / M_PI; }
+namespace {
 
-DepthImageToLaserScanSliceNode::DepthImageToLaserScanSliceNode(ros::NodeHandle& nh)
-    : nh_(nh), it_(nh) {
-  private_nh_ = ros::NodeHandle("~");
+bool is_host_big_endian() {
+  const uint16_t one = 1;
+  return *reinterpret_cast<const uint8_t*>(&one) == 0;
+}
+
+}  // namespace
+
+DepthImageToLaserScanSliceNode::DepthImageToLaserScanSliceNode(
+    ros::NodeHandle& nh, ros::NodeHandle& private_nh)
+    : nh_(nh), private_nh_(private_nh), it_(nh) {
   private_nh_.getParam("output_frame_id", output_frame_id_);
 
   private_nh_.getParam("range_min", range_min_);
@@ -52,21 +58,43 @@ void DepthImageToLaserScanSliceNode::callback(
     initialize_laserscan_msg();
   }
 
-  cv_bridge::CvImagePtr cv_ptr;
-  try {
-    cv_ptr = cv_bridge::toCvCopy(depth_msg, sensor_msgs::image_encodings::TYPE_16UC1);
-  } catch (cv_bridge::Exception& e) {
-    ROS_ERROR("cv_bridge exception: %s", e.what());
+  // Read the message buffer in place instead of copying it with cv_bridge.
+  namespace enc = sensor_msgs::image_encodings;
+  if (depth_msg->encoding != enc::TYPE_16UC1 &&
+      depth_msg->encoding != enc::MONO16) {
+    ROS_ERROR_THROTTLE(10, "unsupported depth encoding: %s",
+                       depth_msg->encoding.c_str());
+    return;
+  }
+  if (bool(depth_msg->is_bigendian) != is_host_big_endian()) {
+    ROS_ERROR_THROTTLE(10, "depth image byte order differs from the host");
+    return;
+  }
+  if (static_cast<int>(depth_msg->width) != depth_to_scan_->width() ||
+      static_cast<int>(depth_msg->height) != depth_to_scan_->height() ||
+      depth_msg->step < depth_msg->width * sizeof(uint16_t) ||
+      depth_msg->data.size() <
+          static_cast<size_t>(depth_msg->step) * depth_msg->height) {
+    ROS_ERROR_THROTTLE(10,
+                       "depth image size %ux%u (step %u, %zu bytes) does not "
+                       "match camera info %dx%d",
+                       depth_msg->width, depth_msg->height, depth_msg->step,
+                       depth_msg->data.size(), depth_to_scan_->width(),
+                       depth_to_scan_->height());
     return;
   }
 
   // construct scan and publish
-  scan_msg_->header = depth_msg->header;
-  if(output_frame_id_.length() > 0){
-    scan_msg_->header.frame_id = output_frame_id_;
+  // A new message per frame, so that subscribers in the same process
+  // can keep the shared pointer without copying it.
+  auto scan_msg = boost::make_shared<sensor_msgs::LaserScan>(scan_template_);
+  scan_msg->header = depth_msg->header;
+  if (output_frame_id_.length() > 0) {
+    scan_msg->header.frame_id = output_frame_id_;
   }
-  scan_msg_->ranges = *depth_to_scan_->convert(cv_ptr->image);
-  scan_pub_.publish(scan_msg_);
+  depth_to_scan_->convert(depth_msg->data.data(), depth_msg->step,
+                          scan_msg->ranges);
+  scan_pub_.publish(scan_msg);
 }
 
 void DepthImageToLaserScanSliceNode::initialize_laserscan_msg() {
@@ -80,24 +108,16 @@ void DepthImageToLaserScanSliceNode::initialize_laserscan_msg() {
     angle_max = angles->back();
   }
 
-  scan_msg_ = sensor_msgs::LaserScanPtr(new sensor_msgs::LaserScan());
-  scan_msg_->angle_min = angle_min;
-  scan_msg_->angle_max = angle_max;
-  scan_msg_->angle_increment =
-      (scan_msg_->angle_max - scan_msg_->angle_min) / (angles->size() - 1);
-  scan_msg_->time_increment = 0.0;
-  scan_msg_->scan_time = scan_time_;
-  scan_msg_->range_min = range_min_;
-  scan_msg_->range_max = range_max_;
+  scan_template_ = sensor_msgs::LaserScan();
+  scan_template_.angle_min = angle_min;
+  scan_template_.angle_max = angle_max;
+  scan_template_.angle_increment =
+      (scan_template_.angle_max - scan_template_.angle_min) /
+      (angles->size() - 1);
+  scan_template_.time_increment = 0.0;
+  scan_template_.scan_time = scan_time_;
+  scan_template_.range_min = range_min_;
+  scan_template_.range_max = range_max_;
 }
 
 }  // namespace depthimage_to_laserscan_slice
-
-int main(int argc, char* argv[]) {
-  ros::init(argc, argv, "depthimage_to_laserscan_slice_node");
-  ros::NodeHandle nh;
-  depthimage_to_laserscan_slice::DepthImageToLaserScanSliceNode laser_scan_node(nh);
-
-  ros::spin();
-  return 0;
-}

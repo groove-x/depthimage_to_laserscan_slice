@@ -10,7 +10,9 @@ namespace depthimage_to_laserscan_slice {
 
 class DepthImageToLaserScanSliceNode {
  public:
-  DepthImageToLaserScanSliceNode(ros::NodeHandle& nh);
+  // nh: node handle for the topics, private_nh: node handle for the params
+  DepthImageToLaserScanSliceNode(ros::NodeHandle& nh,
+                                 ros::NodeHandle& private_nh);
 
   void callback(const sensor_msgs::ImageConstPtr& image_msg,
                 const sensor_msgs::CameraInfoConstPtr& info_msg);
@@ -23,12 +25,13 @@ class DepthImageToLaserScanSliceNode {
   ros::Publisher scan_pub_;
 
   std::string output_frame_id_;
-  float scan_time_;
-  float range_min_;
-  float range_max_;
+  float scan_time_ = 0.0f;
+  float range_min_ = 0.0f;
+  float range_max_ = 0.0f;
   std::unique_ptr<DepthimageToLaserscanSlice> depth_to_scan_;
 
-  sensor_msgs::LaserScanPtr scan_msg_;
+  // fields other than header and ranges, copied to every published scan
+  sensor_msgs::LaserScan scan_template_;
 
   void initialize_laserscan_msg();
 };

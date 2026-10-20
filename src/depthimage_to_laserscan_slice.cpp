@@ -1,5 +1,7 @@
 #include "depthimage_to_laserscan_slice/depthimage_to_laserscan_slice.hpp"
 
+#include <cstring>
+
 namespace depthimage_to_laserscan_slice {
 
 DepthimageToLaserscanSlice::DepthimageToLaserscanSlice(int width, int height,
@@ -21,25 +23,26 @@ DepthimageToLaserscanSlice::DepthimageToLaserscanSlice(int width, int height,
   initialize_coefficient();
 }
 
-std::shared_ptr<std::vector<float>> DepthimageToLaserscanSlice::convert(
-    const cv::Mat &depth_image) {
-  std::shared_ptr<std::vector<float>> ranges(
-      new std::vector<float>(width_, INFINITY));
+void DepthimageToLaserscanSlice::convert(const uint8_t *depth, size_t step,
+                                         std::vector<float> &ranges) const {
+  ranges.assign(width_, INFINITY);
 
-  // the image is upside down.
-  auto pdepth = depth_image.ptr<uint16_t>(0) + height_ * width_ - 1;
-  double *pcoeff = coeff_.data();
+  // The image is upside down: walk the pixels from the last one backwards.
+  const double *pcoeff = coeff_.data();
   for (int v = 0; v < height_; ++v) {
-    for (int u = 0; u < width_; ++u, --pdepth) {
-      auto range = (*pdepth) * *(pcoeff++);
-      auto y = (*pdepth) * *(pcoeff++);
+    const uint8_t *row = depth + (height_ - 1 - v) * step;
+    for (int u = 0; u < width_; ++u) {
+      // memcpy, because a row is not 2-byte aligned when the step is odd.
+      uint16_t d;
+      std::memcpy(&d, row + (width_ - 1 - u) * sizeof(uint16_t), sizeof(d));
+      auto range = d * *(pcoeff++);
+      auto y = d * *(pcoeff++);
       // store minimum range with valid conditions
       if (lower_height_ < y && y < upper_height_ && lower_range_ < range &&
-          range < upper_range_ && range < (*ranges)[u])
-        (*ranges)[u] = range;
+          range < upper_range_ && range < ranges[u])
+        ranges[u] = range;
     }
   }
-  return ranges;
 }
 
 void DepthimageToLaserscanSlice::initialize_coefficient() {

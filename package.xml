@@ -10,6 +10,7 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>image_transport</build_depend>
+  <build_depend>pluginlib</build_depend>
   <build_depend>nodelet</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>sensor_msgs</build_depend>
@@ -18,10 +19,14 @@
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>sensor_msgs</build_export_depend>
   <exec_depend>image_transport</exec_depend>
+  <exec_depend>pluginlib</exec_depend>
   <exec_depend>nodelet</exec_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
 
+  <test_depend>rosunit</test_depend>
+
   <export>
+    <nodelet plugin="${prefix}/nodelets.xml"/>
   </export>
 </package>
