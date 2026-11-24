@@ -4,7 +4,7 @@
   <version>0.1.0</version>
   <description>The depthimage_to_laserscan_slice package</description>
   <maintainer email="dev@groove-x.com">GROOVE X Development Team</maintainer>
-  <license>TODO</license>
+  <license>BSD-3-Clause</license>
   <url type="website">https://github.com/groove-x/depthimage_to_laserscan_slice</url>
   <!-- <author email="jane.doe@example.com">Jane Doe</author> -->
 
