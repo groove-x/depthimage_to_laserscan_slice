@@ -10,3 +10,7 @@ Convert depth image to laser scan with slicing.
 
 The input must be a `16UC1` (or `mono16`) depth image in millimeters.
 The node reads the message buffer directly and does not depend on cv_bridge or OpenCV.
+
+## License
+
+BSD 3-Clause License. See `LICENSE`.
