@@ -6,7 +6,6 @@
   <maintainer email="dev@groove-x.com">GROOVE X Development Team</maintainer>
   <license>BSD-3-Clause</license>
   <url type="website">https://github.com/groove-x/depthimage_to_laserscan_slice</url>
-  <!-- <author email="jane.doe@example.com">Jane Doe</author> -->
 
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>image_transport</build_depend>
