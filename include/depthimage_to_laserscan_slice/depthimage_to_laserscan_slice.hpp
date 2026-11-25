@@ -21,8 +21,10 @@ class DepthimageToLaserscanSlice {
     lower_range_ = lower;
     upper_range_ = upper;
   }
+  // The coefficients depend on the pitch, so they are rebuilt here.
   void set_optical_axis_pitch(double optical_axis_pitch) {
     optical_axis_pitch_ = optical_axis_pitch;
+    initialize_coefficient();
   }
 
   int width() const { return width_; }
